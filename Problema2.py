@@ -71,4 +71,4 @@ if __name__ == '__main__':
             multiprocessing.Process(target=play_martingale, args=(bank_account, )),
             multiprocessing.Process(target=play_martingale, args=(bank_account, )),
             multiprocessing.Process(target=play_martingale, args=(bank_account, )),
-        ]
+        ] 
