@@ -1,43 +1,47 @@
-import threading
+import multiprocessing
 
-saldo = 100  # saldo inicial de la cuenta bancaria
+# Lock object to control access to the shared saldo variable
+saldo_lock = multiprocessing.Lock()
+saldo = multiprocessing.Value('i', 100)  # saldo inicial de la cuenta bancaria
 
 def operacion_dinero(cantidad, tipo_operacion):
     global saldo
-    if tipo_operacion == "ingreso":
-        saldo += cantidad
-    elif tipo_operacion == "retiro":
-        saldo -= cantidad
+    with saldo_lock:
+        if tipo_operacion == "ingreso":
+            saldo.value += cantidad
+        elif tipo_operacion == "retiro":
+            saldo.value -= cantidad
 
-# Generar procesos de manera concurrente
-for i in range(40):
-    thread = threading.Thread(target=operacion_dinero, args=(100, "ingreso"))
-    thread.start()
+if __name__ == '__main__':
+    # Generar procesos de manera concurrente
+    for i in range(40):
+        p = multiprocessing.Process(target=operacion_dinero, args=(100, "ingreso"))
+        p.start()
 
-for i in range(20):
-    thread = threading.Thread(target=operacion_dinero, args=(50, "ingreso"))
-    thread.start()
+    for i in range(20):
+        p = multiprocessing.Process(target=operacion_dinero, args=(50, "ingreso"))
+        p.start()
 
-for i in range(60):
-    thread = threading.Thread(target=operacion_dinero, args=(20, "ingreso"))
-    thread.start()
+    for i in range(60):
+        p = multiprocessing.Process(target=operacion_dinero, args=(20, "ingreso"))
+        p.start()
 
-for i in range(40):
-    thread = threading.Thread(target=operacion_dinero, args=(100, "retiro"))
-    thread.start()
+    for i in range(40):
+        p = multiprocessing.Process(target=operacion_dinero, args=(100, "retiro"))
+        p.start()
 
-for i in range(20):
-    thread = threading.Thread(target=operacion_dinero, args=(50, "retiro"))
-    thread.start()
+    for i in range(20):
+        p = multiprocessing.Process(target=operacion_dinero, args=(50, "retiro"))
+        p.start()
 
-for i in range(60):
-    thread = threading.Thread(target=operacion_dinero, args=(20, "retiro"))
-    thread.start()
+    for i in range(60):
+        p = multiprocessing.Process(target=operacion_dinero, args=(20, "retiro"))
+        p.start()
 
-# Esperar a que todos los hilos finalicen
-for thread in threading.enumerate():
-    if thread != threading.current_thread():
-        thread.join()
+    # Esperar a que todos los procesos finalicen
+    for p in multiprocessing.active_children():
+        p.join()
 
-# Imprimir saldo final
-print("Saldo final:", saldo)
+    # Imprimir saldo final
+    print("Saldo final:", saldo.value)
+
