@@ -2,38 +2,36 @@ import threading
 
 saldo = 100  # saldo inicial de la cuenta bancaria
 
-def ingresar_dinero(cantidad):
+def operacion_dinero(cantidad, tipo_operacion):
     global saldo
-    saldo += cantidad
+    if tipo_operacion == "ingreso":
+        saldo += cantidad
+    elif tipo_operacion == "retiro":
+        saldo -= cantidad
 
-def retirar_dinero(cantidad):
-    global saldo
-    saldo -= cantidad
-
-# Generar procesos que ingresan dinero
+# Generar procesos de manera concurrente
 for i in range(40):
-    thread = threading.Thread(target=ingresar_dinero, args=(100,))
+    thread = threading.Thread(target=operacion_dinero, args=(100, "ingreso"))
     thread.start()
 
 for i in range(20):
-    thread = threading.Thread(target=ingresar_dinero, args=(50,))
+    thread = threading.Thread(target=operacion_dinero, args=(50, "ingreso"))
     thread.start()
 
 for i in range(60):
-    thread = threading.Thread(target=ingresar_dinero, args=(20,))
+    thread = threading.Thread(target=operacion_dinero, args=(20, "ingreso"))
     thread.start()
 
-# Generar procesos que retiran dinero
 for i in range(40):
-    thread = threading.Thread(target=retirar_dinero, args=(100,))
+    thread = threading.Thread(target=operacion_dinero, args=(100, "retiro"))
     thread.start()
 
 for i in range(20):
-    thread = threading.Thread(target=retirar_dinero, args=(50,))
+    thread = threading.Thread(target=operacion_dinero, args=(50, "retiro"))
     thread.start()
 
 for i in range(60):
-    thread = threading.Thread(target=retirar_dinero, args=(20,))
+    thread = threading.Thread(target=operacion_dinero, args=(20, "retiro"))
     thread.start()
 
 # Esperar a que todos los hilos finalicen
