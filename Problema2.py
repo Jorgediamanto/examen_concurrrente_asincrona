@@ -1,84 +1,74 @@
-import threading
 import time
 import random
+import multiprocessing
 
-saldo_jugadores = [1000] * 12    # 4 jugadores para cada estrategia
-saldo_banca = 50000
-
-def verificar_saldo():
-    global saldo_jugadores, saldo_banca
-    total_jugadores = sum(saldo_jugadores)
-    if total_jugadores > saldo_banca:
-        return False
-    else:
-        return True
-
-
-
-def jugar_a_numero(numero):
-    global saldo_jugadores, saldo_banca
+def play_number(bank_account):
+    my_number = random.randint(1, 36)
+    bet_size = 10
     while True:
         time.sleep(3)
-        apuesta = 10
-        saldo_jugadores[numero] -= apuesta
-        resultado = random.randint(0, 36)
-        if resultado == numero:
-            saldo_jugadores[numero] += 36 * apuesta
-            if verificar_saldo():
-                saldo_banca -= 36 * apuesta
-            else:
-                print("La banca no puede cubrir todas las apuestas realizadas.")
-            
+        spin_result = random.randint(0, 36)
+        if spin_result == my_number:
+            # Win case
+            bank_account.value -= 360
+            bet_size = 10
         else:
-            saldo_banca += apuesta
+            # Loss case
+            bank_account.value += bet_size
+            bet_size *= 2
+            if bank_account.value < 0:
+                # Bankrupt case
+                break
 
-def jugar_a_paridad(par):
-    global saldo_jugadores, saldo_banca
+def play_even_odd(bank_account, even_odds):
     while True:
         time.sleep(3)
-        apuesta = 10
-        saldo_jugadores[4 + par] -= apuesta
-        resultado = random.randint(0, 36)
-        if resultado == 0:
-            saldo_jugadores[4 + par] += apuesta
-            
-        elif resultado % 2 == par:
-            saldo_jugadores[4 + par] += 20
-            if verificar_saldo():
-                saldo_banca -= 20
-            else:
-                print("La banca no puede cubrir todas las apuestas realizadas.")
-            
+        spin_result = random.randint(0, 36)
+        if spin_result % 2 == even_odds:
+            # Win case
+            bank_account.value += 20
         else:
-            saldo_banca += apuesta
+            # Loss case
+            bank_account.value -= 10
+            if bank_account.value < 0:
+                # Bankrupt case
+                break
 
-def jugar_a_martingala(numero):
-    global saldo_jugadores, saldo_banca
+def play_martingale(bank_account):
+    my_number = random.randint(1, 36)
+    bet_size = 10
     while True:
         time.sleep(3)
-        apuesta = 10
-        saldo_jugadores[8 + numero] -= apuesta
-        resultado = random.randint(0, 36)
-        if resultado == numero:
-            saldo_jugadores[8 + numero] += 36 * apuesta
-            if verificar_saldo():
-                saldo_banca -= 36 * apuesta
-            else:
-                print("La banca no puede cubrir todas las apuestas realizadas.")
-            
+        spin_result = random.randint(0, 36)
+        if spin_result == my_number:
+            # Win case
+            bank_account.value -= 360
+            bet_size = 10
         else:
-            saldo_banca += apuesta
-            apuesta *= 2
-            while apuesta < saldo_jugadores[8 + numero]:
-                saldo_jugadores[8 + numero] -= apuesta
-                resultado = random.randint(0, 36)
-                if resultado == numero:
-                    saldo_jugadores[8 + numero] += 36 * apuesta
-                    if verificar_saldo():
-                        saldo_banca -= 36 * apuesta
-                    else:
-                        print("La banca no puede cubrir todas las apuestas realizadas.")
-                    apuesta = 10
-                    break
-                else:
-                    saldo_banca += apuesta
+            # Loss case
+            bank_account.value += bet_size
+            bet_size *= 2
+            if bank_account.value < 0:
+                # Bankrupt case
+                break
+
+if __name__ == '__main__':
+    bank_account = multiprocessing.Value('i', 50000)
+
+    with multiprocessing.Manager() as manager:
+        queue = manager.Queue()
+
+        processes = [
+            multiprocessing.Process(target=play_number, args=(bank_account,)),
+            multiprocessing.Process(target=play_number, args=(bank_account,)),
+            multiprocessing.Process(target=play_number, args=(bank_account,)),
+            multiprocessing.Process(target=play_number, args=(bank_account,)),
+            multiprocessing.Process(target=play_even_odd, args=(bank_account, 0)),
+            multiprocessing.Process(target=play_even_odd, args=(bank_account, 1)),
+            multiprocessing.Process(target=play_even_odd, args=(bank_account, 2)),
+            multiprocessing.Process(target=play_even_odd, args=(bank_account, 4)),
+            multiprocessing.Process(target=play_martingale, args=(bank_account, )),
+            multiprocessing.Process(target=play_martingale, args=(bank_account, )),
+            multiprocessing.Process(target=play_martingale, args=(bank_account, )),
+            multiprocessing.Process(target=play_martingale, args=(bank_account, )),
+        ]
